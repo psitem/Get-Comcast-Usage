@@ -54,31 +54,30 @@ param(
     [parameter(HelpMessage="InfluxDB database name", Mandatory=$false)] [Alias("id")] [string] $influxdbname
     )
     
-$COMCAST_API_VERSION = 4.1
+$COMCAST_API_VERSION = 4.3
 
 $LOGIN_URL = 'https://umcs.comcast.net/usage_meter/login/uid?callback=?'
 $USAGE_URL = 'https://umcs.comcast.net/usage_meter/usage/accountCurrent'
 
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $payload = @{ username = $user ; password = $password ; version = $COMCAST_API_VERSION }
-$global:resp = Invoke-RestMethod -WebSession $session -Method POST -Body $payload -Uri $LOGIN_URL
+$resp = Invoke-RestMethod -WebSession $session -Method POST -Body $payload -Uri $LOGIN_URL
 $token = $resp.response.access_token
 
 $usage_payload = @{username = $user ; access_token = $token ; version = $COMCAST_API_VERSION }
 
-$global:tmp = Invoke-RestMethod -WebSession $session -Method POST -Body $usage_payload -Uri $USAGE_URL
+$tmp = Invoke-RestMethod -WebSession $session -Method POST -Body $usage_payload -Uri $USAGE_URL
 $usage = $tmp.response.account.usage_total
 
 $usage
 
-#Write-host $tmp.response.account
-
 if (($influxdbuser -ne "") -and ($influxdbpassword -ne "") -and ($influxdbname -ne "") -and ($influxdbhost -ne "") ) {
     Write-host "Posting to InfluxDB"
 
-    $line = "comcast_usage,label=""Usage"" value=$usage"
+    $line = "comcast_usage,label=""Usage"" value=$usage `n"
 
     $authheader = "Basic " + ([Convert]::ToBase64String([System.Text.encoding]::ASCII.GetBytes("$($influxdbuser):$($influxdbpassword)")))
     $uri = "http://$($influxdbhost):$($influxdbport)/write?db=$influxdbname"
-    Invoke-RestMethod -Headers @{Authorization=$authheader} -Uri $uri -Method POST -Body $line
+    try {Invoke-RestMethod -Headers @{Authorization=$authheader} -Uri $uri -Method POST -Body $line | Out-Null}
+    catch { Write-host "Error posting to InfluxDB" ; throw $_ }
 }
