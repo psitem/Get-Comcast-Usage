@@ -45,7 +45,7 @@ This is an example response from https://umcs.comcast.net/usage_meter/usage/acco
     		<policy_name>Unlimited_G5</policy_name>
     		<policy_display_name>Unlimited Data Plan</policy_display_name>
     		<home_device_details>
-				<device>
+				<device>
 					<device_mac>DE:AD:BE:EF:DE:AD</device_mac>
 					<device_usage>1792</device_usage>
 					<policy_name>Extreme</policy_name>
