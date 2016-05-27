@@ -68,11 +68,12 @@ $usage_payload = @{username = $user ; access_token = $token ; version = $COMCAST
 
 $tmp = Invoke-RestMethod -WebSession $session -Method POST -Body $usage_payload -Uri $USAGE_URL
 $usage = $tmp.response.account.usage_total
+$uom = $tmp.response.account.usage_uom
 
-$usage
+"$usage $uom"
 
 if (($influxdbuser -ne "") -and ($influxdbpassword -ne "") -and ($influxdbname -ne "") -and ($influxdbhost -ne "") ) {
-    Write-host "Posting to InfluxDB"
+    Write-Debug "Posting to InfluxDB"
 
     $line = "comcast_usage,label=""Usage"" value=$usage `n"
 
